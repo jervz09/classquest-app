@@ -1,0 +1,10 @@
+project_id = "classquest"
+
+[api]
+enabled = true
+schemas = ["public", "graphql_public"]
+extra_search_path = ["public", "extensions"]
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]

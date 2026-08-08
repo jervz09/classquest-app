@@ -1,0 +1,2 @@
+-- Achievement definitions are inserted idempotently by the initial migration.
+-- Add optional development-only content here. Never reference fabricated auth.users IDs.

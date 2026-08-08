@@ -1,36 +1,116 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClassQuest
 
-## Getting Started
+ClassQuest is a gamified classroom learning platform where teachers create quiz quests and students earn XP, level up, unlock achievements, and compete on private class leaderboards.
 
-First, run the development server:
+## Stack
+
+Next.js 16 App Router, React 19, strict TypeScript, Tailwind CSS 4, shadcn/ui, Motion, Supabase Auth/PostgreSQL/RLS, Zod, Vitest, pnpm, GitHub Actions, and Vercel.
+
+## Local setup
+
+Prerequisites: Node.js 24+ and pnpm 11.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+In Supabase, open **Project Settings → API**. Copy the Project URL into `NEXT_PUBLIC_SUPABASE_URL` and the publishable key into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` in `.env.local`. Older projects may label the publishable key as the anon key. Never put a service-role key in a `NEXT_PUBLIC_*` variable.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The trusted registration Server Action also requires `SUPABASE_SERVICE_ROLE_KEY` in `.env.local`. This variable is server-only and must never be exposed to browser code, committed, logged, or shared in chat.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+In Supabase **Authentication → URL Configuration**, configure:
 
-## Learn More
+```text
+Site URL: http://localhost:3000
+Redirect URLs:
+http://localhost:3000/auth/callback
+http://localhost:3000/auth/confirm
+http://localhost:3000/update-password
+```
 
-To learn more about Next.js, take a look at the following resources:
+Add the equivalent HTTPS URLs when a Vercel preview or production domain is available. `/auth/callback` handles the default PKCE email confirmation and recovery flow. `/auth/confirm` supports token-hash email templates.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Database
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The repository is the schema source of truth. The initial migration is:
 
-## Deploy on Vercel
+`supabase/migrations/20260808000000_initial_classquest_schema.sql`
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Hosted project status
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Project: **ClassQuest**
+- Project ref: `edfganqqeyoulxnduezk` (public identifier, not a credential)
+- Initial migration applied successfully on **August 8, 2026**
+- Applied migration: `20260808000000_initial_classquest_schema.sql`
+- Supabase reported that the pre-existing `pgcrypto` extension was retained; this is expected because the migration uses `create extension if not exists`.
+
+The migration was previewed before application:
+
+```bash
+pnpm dlx supabase@2.109.0 link --project-ref edfganqqeyoulxnduezk
+pnpm dlx supabase@2.109.0 db push --dry-run
+pnpm dlx supabase@2.109.0 db push
+```
+
+CLI `2.109.0` was pinned because `2.110.0` failed while parsing the Management API's `inserted_at` timestamp during `supabase link`. Version `2.109.0` linked and pushed successfully. Re-test newer CLI releases before changing the pinned version.
+
+To use a local Supabase stack:
+
+```bash
+pnpm dlx supabase@2.109.0 start
+pnpm dlx supabase@2.109.0 db reset
+pnpm dlx supabase@2.109.0 gen types typescript --local > src/types/database.generated.ts
+```
+
+To apply to the existing hosted project, first review the SQL, install/authenticate the Supabase CLI, then run:
+
+```bash
+pnpm dlx supabase@2.109.0 login
+pnpm dlx supabase@2.109.0 link --project-ref YOUR_PROJECT_REF
+pnpm dlx supabase@2.109.0 db push --dry-run
+pnpm dlx supabase@2.109.0 db push
+```
+
+The project ref is in Supabase **Project Settings → General**. The final command changes the remote database; run it only after reviewing the dry run. Alternatively, paste the migration into the Supabase SQL Editor, but CLI migrations are preferred because they preserve version history.
+
+## Commands
+
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test
+pnpm build
+```
+
+## Security model
+
+- `student_progress` is the sole authority for mutable XP and level data.
+- Signup metadata cannot directly grant teacher access. The profile trigger reads only protected `raw_app_meta_data`; a future trusted server registration flow must validate the requested role and set that field with server-only credentials.
+- Students cannot select `questions` directly. `get_assignment_questions` returns only display-safe fields.
+- `submit_quiz_attempt` validates access, scores private answers, writes analytics, awards XP, and unlocks achievements transactionally.
+- Class codes are generated from a non-ambiguous random alphabet and joining happens only through `join_class_by_code`.
+- Every classroom/user-data table has RLS enabled. Frontend role checks are never the authorization boundary.
+
+## Authentication
+
+Implemented flows:
+
+- Email/password teacher and student registration
+- Server-validated role assignment using a server-only admin client
+- Email-confirmation callback with invalid/expired-link handling
+- Login and logout
+- Forgot-password and update-password flows
+- Protected teacher and student layouts with database-backed role checks
+- Generic recovery responses that do not reveal whether an email is registered
+
+The service-role client is imported through a `server-only` module. Normal application reads remain subject to RLS; elevated access is limited to the registration role-assignment operation.
+
+## Deployment
+
+Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
+
+## Current scope
+
+Phase 1 foundation and Phase 3 authentication are ready, and the initial migration has been applied to the hosted Supabase project. Landing-page CTAs now lead to working registration and login flows. The next implementation phase is the teacher workflow: dashboard data, class creation, class details, quiz builder, assignments, and results.

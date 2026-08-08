@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // The compiler API avoids spawning a detached tsc process in restricted CI runners.
+    useTypeScriptCli: false,
+  },
 };
 
 export default nextConfig;
