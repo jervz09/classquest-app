@@ -1,0 +1,6 @@
+import Link from "next/link";
+import { Plus } from "lucide-react";
+import { ClassCard } from "@/components/classes/class-card";
+import { Button } from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/server";
+export default async function StudentClassesPage() { const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser(); const { data } = await supabase.from("class_members").select("classes(id, name, section, subject)").eq("student_id", user!.id); const classes = (data ?? []).flatMap((item) => item.classes ?? []); return <main className="mx-auto max-w-6xl px-5 py-10"><div className="flex items-end justify-between"><div><p className="font-medium text-primary">Classes</p><h1 className="mt-2 text-4xl font-bold tracking-tight">Your classrooms</h1></div><Button asChild><Link href="/student/classes/join"><Plus />Join class</Link></Button></div>{classes.length ? <div className="mt-8 grid gap-4 md:grid-cols-2">{classes.map((item) => <ClassCard key={item.id} classItem={item} href={`/student/classes/${item.id}`} />)}</div> : <p className="mt-10 rounded-3xl border border-dashed p-10 text-center text-muted-foreground">No classes yet. Join one using your teacher’s code.</p>}</main>; }

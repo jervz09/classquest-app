@@ -107,10 +107,25 @@ Implemented flows:
 
 The service-role client is imported through a `server-only` module. Normal application reads remain subject to RLS; elevated access is limited to the registration role-assignment operation.
 
+## Class workflow
+
+Implemented flows:
+
+- Teacher dashboard with real class, unique-student, and published-quiz counts
+- Teacher class creation with server-generated collision-safe join codes
+- Teacher class list and class details
+- Copyable class code and enrolled-student roster
+- Student dashboard with real progression and joined classes
+- Secure student joining through `join_class_by_code` without exposing searchable class codes
+- Student class details and assigned-quest empty state
+- Friendly invalid-code, loading, success, and empty states
+
+Class creation is protected by teacher RLS policies. Class joining and code resolution remain inside the authenticated database function; the browser never searches the `classes` table by code.
+
 ## Deployment
 
 Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
 
 ## Current scope
 
-Phase 1 foundation and Phase 3 authentication are ready, and the initial migration has been applied to the hosted Supabase project. Landing-page CTAs now lead to working registration and login flows. The next implementation phase is the teacher workflow: dashboard data, class creation, class details, quiz builder, assignments, and results.
+The foundation, authentication, and class workflow are ready, and the initial migration has been applied to the hosted Supabase project. The next implementation phase is the quiz workflow: quiz list, question builder, publishing, and class assignment.
