@@ -88,6 +88,12 @@ pnpm verify
 
 `src/types/database.ts` is generated from the applied Supabase schema. Regenerate and commit it after every schema migration.
 
+## Application architecture
+
+ClassQuest uses feature-organized Server Actions as its controller layer. UI forms import mutations from `src/server/actions/<feature>`, Zod schemas live in `src/lib/validations`, and trusted multi-table operations remain in version-controlled PostgreSQL functions.
+
+See the [Server Action catalog](src/server/actions/README.md) for every mutation and the checklist for adding new features.
+
 ## Security model
 
 - `student_progress` is the sole authority for mutable XP and level data.

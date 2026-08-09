@@ -1,7 +1,7 @@
 import { notFound, redirect } from "next/navigation";
 import { QuizGame } from "@/components/game/quiz-game";
 import { createClient } from "@/lib/supabase/server";
-import { submitQuizAction } from "./actions";
+import { submitQuizAction } from "@/server/actions/gameplay";
 
 type AssignmentQuestionRow = {
   id: string;

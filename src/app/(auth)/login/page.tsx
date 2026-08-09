@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthForm, AuthShell } from "@/components/auth/auth-form";
 import { getHomeForCurrentUser } from "@/lib/auth/guards";
-import { loginAction } from "../actions";
+import { loginAction } from "@/server/actions/auth";
 
 export default async function LoginPage({ searchParams }: PageProps<"/login">) {
   const home = await getHomeForCurrentUser(); if (home) redirect(home);

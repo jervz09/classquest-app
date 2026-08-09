@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { AssignmentForm } from "@/components/quizzes/quiz-forms";
 import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
-import { assignQuizAction, deleteQuestionAction, reorderQuestionAction, togglePublishAction } from "../actions";
+import { assignQuizAction, deleteQuestionAction, reorderQuestionAction, togglePublishAction } from "@/server/actions/quizzes";
 
 export default async function QuizDetailPage({ params, searchParams }: PageProps<"/teacher/quizzes/[quizId]">) {
   const { quizId } = await params; const query = await searchParams; const supabase = await createClient(); const { data: { user } } = await supabase.auth.getUser();

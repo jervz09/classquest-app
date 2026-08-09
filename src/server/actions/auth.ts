@@ -2,13 +2,16 @@
 
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { resolveTrustedOrigin } from "@/lib/auth/request-origin";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema, loginSchema, registerSchema, updatePasswordSchema, type AuthActionState } from "@/lib/validations/auth";
+import { formValues } from "./shared";
 
-function fields(formData: FormData) { return Object.fromEntries([...formData.entries()].filter(([, value]) => typeof value === "string")) as Record<string, string>; }
-function invalid(message = "Check the highlighted information and try again", values?: Record<string, string>): AuthActionState { return { status: "error", message, fields: values }; }
+function invalid(message = "Check the highlighted information and try again", values?: Record<string, string>): AuthActionState {
+  return { status: "error", message, fields: values };
+}
+
 function friendlyAuthError(message: string) {
   if (/invalid login credentials/i.test(message)) return "Email or password is incorrect";
   if (/email not confirmed/i.test(message)) return "Confirm your email before signing in";
@@ -28,7 +31,8 @@ async function requestOrigin() {
 }
 
 export async function loginAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const values = fields(formData); const parsed = loginSchema.safeParse(values);
+  const values = formValues(formData);
+  const parsed = loginSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error.issues[0]?.message, { email: values.email ?? "" });
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -38,7 +42,8 @@ export async function loginAction(_state: AuthActionState, formData: FormData): 
 }
 
 export async function registerAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const values = fields(formData); const parsed = registerSchema.safeParse(values);
+  const values = formValues(formData);
+  const parsed = registerSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error.issues[0]?.message, { fullName: values.fullName ?? "", email: values.email ?? "", role: values.role ?? "" });
   let admin: ReturnType<typeof createAdminClient>;
   try { admin = createAdminClient(); }
@@ -66,20 +71,27 @@ export async function registerAction(_state: AuthActionState, formData: FormData
 }
 
 export async function forgotPasswordAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const values = fields(formData); const parsed = forgotPasswordSchema.safeParse(values);
+  const values = formValues(formData);
+  const parsed = forgotPasswordSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error.issues[0]?.message, { email: values.email ?? "" });
-  const origin = await requestOrigin(); if (!origin) return invalid("Unable to determine the application URL");
+  const origin = await requestOrigin();
+  if (!origin) return invalid("Unable to determine the application URL");
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo: `${origin}/auth/callback?next=/update-password` });
   return { status: "success", message: "If an account exists for that email, a password-reset link is on its way" };
 }
 
 export async function updatePasswordAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
-  const parsed = updatePasswordSchema.safeParse(fields(formData));
+  const parsed = updatePasswordSchema.safeParse(formValues(formData));
   if (!parsed.success) return invalid(parsed.error.issues[0]?.message);
-  const supabase = await createClient(); const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
+  const supabase = await createClient();
+  const { error } = await supabase.auth.updateUser({ password: parsed.data.password });
   if (error) return invalid(friendlyAuthError(error.message));
   return { status: "success", message: "Password updated. You can continue to your dashboard" };
 }
 
-export async function logoutAction() { const supabase = await createClient(); await supabase.auth.signOut(); redirect("/login"); }
+export async function logoutAction() {
+  const supabase = await createClient();
+  await supabase.auth.signOut();
+  redirect("/login");
+}
