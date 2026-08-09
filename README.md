@@ -143,10 +143,23 @@ pnpm dlx supabase@2.109.0 db push
 
 `supabase/migrations/20260809010000_fix_quiz_policy_recursion.sql` replaces cross-table quiz policies with security-definer boolean helpers. This prevents PostgreSQL `42P17` recursion while preserving teacher ownership and published-assignment access rules.
 
+## Student gameplay
+
+Classic Mode is implemented end to end:
+
+- Assigned quiz cards link to a secure start screen and question-by-question game UI
+- `get_assignment_questions` sends question text, choices, and points without exposing correct answers
+- Students must answer every question before submitting their one allowed attempt
+- `submit_quiz_attempt` calculates score, correct answers, and XP transactionally in PostgreSQL
+- Results show score, XP, level progress, achievements, and a post-attempt answer review
+- Completed assignments link back to their existing result instead of allowing duplicate attempts
+
+`supabase/migrations/20260809020000_secure_quiz_gameplay_results.sql` hardens complete-answer validation and adds `get_attempt_review`, which reveals correct answers only after an authorized attempt exists.
+
 ## Deployment
 
 Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
 
 ## Current scope
 
-The foundation, authentication, class workflow, and quiz-authoring workflow are ready, and their migrations have been applied to the hosted project. The next implementation phase is gameplay: safe question delivery, authoritative submission, results, XP, and achievements.
+The foundation, authentication, class workflow, quiz authoring, assignment, and Classic Mode gameplay are ready, and their migrations have been applied to the hosted project. The next implementation phase is teacher results, class leaderboards, and student progress/achievement pages.

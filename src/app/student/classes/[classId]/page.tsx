@@ -1,6 +1,7 @@
 import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function StudentClassPage({ params, searchParams }: PageProps<"/student/classes/[classId]">) {
@@ -9,7 +10,7 @@ export default async function StudentClassPage({ params, searchParams }: PagePro
   const supabase = await createClient();
   const [{ data: classItem }, { data: assignments, error: assignmentsError }] = await Promise.all([
     supabase.from("classes").select("id, name, section, subject").eq("id", classId).single(),
-    supabase.from("assignments").select("id, due_at, quizzes(id, title, description, subject, difficulty, game_mode)").eq("class_id", classId).order("created_at", { ascending: false }),
+    supabase.from("assignments").select("id, due_at, quizzes(id, title, description, subject, difficulty, game_mode), attempts(id)").eq("class_id", classId).order("created_at", { ascending: false }),
   ]);
 
   if (!classItem) notFound();
@@ -38,6 +39,7 @@ export default async function StudentClassPage({ params, searchParams }: PagePro
           <div className="mt-4 grid gap-4">
             {assignments.map((assignment) => {
               const quiz = Array.isArray(assignment.quizzes) ? assignment.quizzes[0] : assignment.quizzes;
+              const attempt = Array.isArray(assignment.attempts) ? assignment.attempts[0] : assignment.attempts;
               return (
                 <article key={assignment.id} className="rounded-2xl border bg-card p-5">
                   <div className="flex flex-col justify-between gap-4 sm:flex-row">
@@ -48,6 +50,7 @@ export default async function StudentClassPage({ params, searchParams }: PagePro
                     </div>
                     {assignment.due_at && <p className="flex shrink-0 items-center gap-1 text-sm text-muted-foreground"><CalendarDays className="size-4" />Due {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(assignment.due_at))}</p>}
                   </div>
+                  <Button className="mt-5" variant={attempt ? "outline" : "default"} asChild><Link href={attempt ? `/student/results/${attempt.id}` : `/student/assignments/${assignment.id}`}>{attempt ? "View results" : "Start quest"}</Link></Button>
                 </article>
               );
             })}
