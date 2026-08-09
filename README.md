@@ -156,10 +156,21 @@ Classic Mode is implemented end to end:
 
 `supabase/migrations/20260809020000_secure_quiz_gameplay_results.sql` hardens complete-answer validation and adds `get_attempt_review`, which reveals correct answers only after an authorized attempt exists.
 
+## Teacher results and analytics
+
+Teacher analytics are available at `/teacher/results`:
+
+- Filter attempts by owned class and quiz
+- Track completion count, average score, active students, and perfect scores
+- Review per-student scores, correct answers, XP, class, and completion time
+- Drill into a quiz to identify low-accuracy questions and individual student performance
+
+Attempt rows remain protected by RLS. `supabase/migrations/20260809030000_teacher_quiz_analytics.sql` adds an ownership-checked aggregation RPC for per-question response counts and accuracy.
+
 ## Deployment
 
 Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
 
 ## Current scope
 
-The foundation, authentication, class workflow, quiz authoring, assignment, and Classic Mode gameplay are ready, and their migrations have been applied to the hosted project. The next implementation phase is teacher results, class leaderboards, and student progress/achievement pages.
+The foundation, authentication, class workflow, quiz authoring, assignment, Classic Mode gameplay, and teacher analytics are ready, and their migrations have been applied to the hosted project. The next implementation phase is class leaderboards and student progress/achievement pages.
