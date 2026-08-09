@@ -1,4 +1,4 @@
-import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, BookOpen, CalendarDays, CheckCircle2, Trophy } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ export default async function StudentClassPage({ params, searchParams }: PagePro
         <h1 className="mt-2 text-4xl font-bold tracking-tight">{classItem.name}</h1>
         <p className="mt-2 text-muted-foreground">{classItem.section || "No section"}</p>
       </section>
+      <Button className="mt-4" variant="outline" asChild><Link href={`/student/classes/${classId}/leaderboard`}><Trophy />View leaderboard</Link></Button>
       <section className="mt-8">
         <div className="flex items-center gap-2"><BookOpen className="text-primary" /><h2 className="text-xl font-semibold">Assigned quests</h2></div>
         {assignments?.length ? (

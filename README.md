@@ -167,10 +167,21 @@ Teacher analytics are available at `/teacher/results`:
 
 Attempt rows remain protected by RLS. `supabase/migrations/20260809030000_teacher_quiz_analytics.sql` adds an ownership-checked aggregation RPC for per-question response counts and accuracy.
 
+## Leaderboards and student progress
+
+Class leaderboards are available from teacher and student class pages. Rankings display only student names, XP, level, and completed quizzes. `supabase/migrations/20260809040000_class_leaderboards.sql` restricts leaderboard access to the class teacher and enrolled students.
+
+The student Progress page includes:
+
+- Current XP, level, and progress toward the next level
+- Quiz completion count and average score
+- Locked and unlocked achievement cards
+- Completed quiz history with links back to answer reviews
+
 ## Deployment
 
 Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
 
 ## Current scope
 
-The foundation, authentication, class workflow, quiz authoring, assignment, Classic Mode gameplay, and teacher analytics are ready, and their migrations have been applied to the hosted project. The next implementation phase is class leaderboards and student progress/achievement pages.
+The complete MVP loop is ready: authentication, classes, quiz authoring, assignment, Classic Mode gameplay, results, teacher analytics, class leaderboards, and student progression. All migrations have been applied to the hosted project. The next phase is production hardening, expanded automated coverage, and deployment preparation.
