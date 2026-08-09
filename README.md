@@ -122,10 +122,31 @@ Implemented flows:
 
 Class creation is protected by teacher RLS policies. Class joining and code resolution remain inside the authenticated database function; the browser never searches the `classes` table by code.
 
+## Quiz workflow
+
+Implemented flows:
+
+- Teacher quiz list with draft/published and question-count states
+- Quiz metadata creation and editing
+- Multiple-choice and true/false question creation and editing
+- Question validation, deletion, and atomic up/down reordering
+- Publish/unpublish controls that require at least one question
+- Assignment to owned classes with optional due dates and duplicate protection
+- Student visibility of published assignments through existing RLS
+
+Question reordering uses `supabase/migrations/20260809000000_secure_question_reordering.sql`. Apply pending migrations with a dry run before using the reorder controls:
+
+```bash
+pnpm dlx supabase@2.109.0 db push --dry-run
+pnpm dlx supabase@2.109.0 db push
+```
+
+`supabase/migrations/20260809010000_fix_quiz_policy_recursion.sql` replaces cross-table quiz policies with security-definer boolean helpers. This prevents PostgreSQL `42P17` recursion while preserving teacher ownership and published-assignment access rules.
+
 ## Deployment
 
 Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
 
 ## Current scope
 
-The foundation, authentication, and class workflow are ready, and the initial migration has been applied to the hosted Supabase project. The next implementation phase is the quiz workflow: quiz list, question builder, publishing, and class assignment.
+The foundation, authentication, class workflow, and quiz-authoring workflow are ready, and their migrations have been applied to the hosted project. The next implementation phase is gameplay: safe question delivery, authoritative submission, results, XP, and achievements.
