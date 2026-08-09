@@ -9,7 +9,9 @@
     "lint": "eslint . --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+    "db:types": "pnpm dlx supabase@2.109.0 gen types typescript --linked > src/types/database.ts"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.4",

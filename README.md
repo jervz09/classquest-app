@@ -61,7 +61,7 @@ To use a local Supabase stack:
 ```bash
 pnpm dlx supabase@2.109.0 start
 pnpm dlx supabase@2.109.0 db reset
-pnpm dlx supabase@2.109.0 gen types typescript --local > src/types/database.generated.ts
+pnpm dlx supabase@2.109.0 gen types typescript --local > src/types/database.ts
 ```
 
 To apply to the existing hosted project, first review the SQL, install/authenticate the Supabase CLI, then run:
@@ -71,6 +71,7 @@ pnpm dlx supabase@2.109.0 login
 pnpm dlx supabase@2.109.0 link --project-ref YOUR_PROJECT_REF
 pnpm dlx supabase@2.109.0 db push --dry-run
 pnpm dlx supabase@2.109.0 db push
+pnpm db:types
 ```
 
 The project ref is in Supabase **Project Settings → General**. The final command changes the remote database; run it only after reviewing the dry run. Alternatively, paste the migration into the Supabase SQL Editor, but CLI migrations are preferred because they preserve version history.
@@ -82,7 +83,10 @@ pnpm lint
 pnpm typecheck
 pnpm test
 pnpm build
+pnpm verify
 ```
+
+`src/types/database.ts` is generated from the applied Supabase schema. Regenerate and commit it after every schema migration.
 
 ## Security model
 
@@ -180,8 +184,10 @@ The student Progress page includes:
 
 ## Deployment
 
-Connect the GitHub repository to Vercel and configure the two public Supabase variables for Preview and Production. Add a service-role variable only when the trusted registration implementation requires it. Vercel Git integration handles deployment; CI only verifies lint, types, tests, and production build.
+Connect the GitHub repository to Vercel and configure the two public Supabase variables plus the server-only service-role variable for registration. Scope Preview and Production credentials deliberately; never expose the service-role key to the browser. Vercel Git integration handles deployments, while CI verifies lint, types, tests, and the production build.
+
+Follow the complete [deployment runbook](docs/deployment.md) for migration order, environment setup, Preview smoke testing, production release, and rollback.
 
 ## Current scope
 
-The complete MVP loop is ready: authentication, classes, quiz authoring, assignment, Classic Mode gameplay, results, teacher analytics, class leaderboards, and student progression. All migrations have been applied to the hosted project. The next phase is production hardening, expanded automated coverage, and deployment preparation.
+The complete MVP loop and initial production-hardening pass are ready. All migrations have been applied to the hosted project. The next release step is configuring Vercel environments and validating a Preview deployment before production promotion.

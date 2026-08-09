@@ -3,6 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { resolveTrustedOrigin } from "@/lib/auth/request-origin";
 import { createClient } from "@/lib/supabase/server";
 import { forgotPasswordSchema, loginSchema, registerSchema, updatePasswordSchema, type AuthActionState } from "@/lib/validations/auth";
 
@@ -14,6 +15,16 @@ function friendlyAuthError(message: string) {
   if (/user already registered/i.test(message)) return "An account with this email already exists";
   if (/rate limit/i.test(message)) return "Too many attempts. Please wait and try again";
   return "We couldn't complete that request. Please try again";
+}
+
+async function requestOrigin() {
+  const requestHeaders = await headers();
+  return resolveTrustedOrigin({
+    origin: requestHeaders.get("origin"),
+    forwardedHost: requestHeaders.get("x-forwarded-host"),
+    host: requestHeaders.get("host"),
+    forwardedProto: requestHeaders.get("x-forwarded-proto"),
+  });
 }
 
 export async function loginAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
@@ -32,7 +43,7 @@ export async function registerAction(_state: AuthActionState, formData: FormData
   let admin: ReturnType<typeof createAdminClient>;
   try { admin = createAdminClient(); }
   catch { return invalid("Registration is not configured yet. Add the real server-only Supabase service-role key and restart the app", { fullName: parsed.data.fullName, email: parsed.data.email, role: parsed.data.role }); }
-  const origin = (await headers()).get("origin");
+  const origin = await requestOrigin();
   if (!origin) return invalid("Unable to determine the application URL");
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({ email: parsed.data.email, password: parsed.data.password, options: { emailRedirectTo: `${origin}/auth/callback`, data: { full_name: parsed.data.fullName } } });
@@ -57,7 +68,7 @@ export async function registerAction(_state: AuthActionState, formData: FormData
 export async function forgotPasswordAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {
   const values = fields(formData); const parsed = forgotPasswordSchema.safeParse(values);
   if (!parsed.success) return invalid(parsed.error.issues[0]?.message, { email: values.email ?? "" });
-  const origin = (await headers()).get("origin"); if (!origin) return invalid("Unable to determine the application URL");
+  const origin = await requestOrigin(); if (!origin) return invalid("Unable to determine the application URL");
   const supabase = await createClient();
   await supabase.auth.resetPasswordForEmail(parsed.data.email, { redirectTo: `${origin}/auth/callback?next=/update-password` });
   return { status: "success", message: "If an account exists for that email, a password-reset link is on its way" };
