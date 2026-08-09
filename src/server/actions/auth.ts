@@ -67,7 +67,7 @@ export async function registerAction(_state: AuthActionState, formData: FormData
   }
 
   if (data.session) redirect(parsed.data.role === "teacher" ? "/teacher" : "/student");
-  return { status: "success", message: "Check your inbox and confirm your email to finish registration" };
+  redirect("/register/success");
 }
 
 export async function forgotPasswordAction(_state: AuthActionState, formData: FormData): Promise<AuthActionState> {

@@ -54,9 +54,11 @@ The service-role key is sensitive and server-only. Never prefix it with `NEXT_PU
 In Supabase Authentication URL configuration:
 
 - Set the production Site URL to the final Vercel/custom domain.
-- Add the production callback URL.
+- Add `<production-url>/auth/callback`, `<production-url>/auth/confirm`, and `<production-url>/update-password` to Redirect URLs.
 - Add approved Vercel Preview callback patterns only when Preview authentication is required.
 - Keep localhost callback URLs for local development.
+
+If an email verification link points to `localhost:3000` in production, the production URL is missing from this configuration or the email template is not using Supabase's `{{ .ConfirmationURL }}` value. Update the Site URL and Redirect URLs, then send a new verification email; previously sent links do not change.
 
 The application callback path is `/auth/callback`; email verification uses `/auth/confirm`.
 

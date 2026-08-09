@@ -32,6 +32,8 @@ http://localhost:3000/update-password
 
 Add the equivalent HTTPS URLs when a Vercel preview or production domain is available. `/auth/callback` handles the default PKCE email confirmation and recovery flow. `/auth/confirm` supports token-hash email templates.
 
+For production email templates, keep the verification link set to Supabase's `{{ .ConfirmationURL }}` value. A production email that links to localhost indicates that the production Site URL or redirect allowlist has not been configured yet.
+
 ## Database
 
 The repository is the schema source of truth. The initial migration is:
